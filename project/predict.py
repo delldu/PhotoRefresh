@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--checkpoint', type=str, default="models/image_scratch.pth", help="checkpint file")
-    parser.add_argument('input', type=str, help="input image")
+    parser.add_argument('--input', type=str, default="images/*.png", help="input image")
     parser.add_argument('-o', '--output', type=str, default="output", help="output folder")
 
     args = parser.parse_args()
@@ -52,5 +52,5 @@ if __name__ == "__main__":
 
         with torch.no_grad():
             output_tensor = model(input_tensor).clamp(0, 1.0).squeeze()
-
-        toimage(output_tensor.cpu()).show()
+        
+        toimage(output_tensor.cpu()).save("{}/{}".format(args.output, os.path.basename(filename)))
