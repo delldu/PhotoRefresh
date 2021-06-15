@@ -4,7 +4,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from detection_models.sync_batchnorm import DataParallelWithCallback
+# from detection_models.sync_batchnorm import DataParallelWithCallback
 from detection_models.antialiasing import Downsample
 
 import pdb
@@ -118,8 +118,8 @@ class UNet(nn.Module):
                 *[nn.ReflectionPad2d(1), nn.Conv2d(prev_channels, out_channels, kernel_size=3)]
             )
 
-        if sync_bn:
-            self = DataParallelWithCallback(self)
+        # if sync_bn:
+        #     self = DataParallelWithCallback(self)
 
     def forward(self, x):
         x = self.first(x)

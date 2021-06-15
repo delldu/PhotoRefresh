@@ -6,6 +6,7 @@ import argparse
 import shutil
 import sys
 from subprocess import call
+import pdb
 
 def run_cmd(command):
     try:
@@ -58,6 +59,8 @@ if __name__ == "__main__":
             + " --gpu_ids "
             + gpu1
         )
+        pdb.set_trace()
+
         run_cmd(stage_1_command)
     else:
 
@@ -86,6 +89,13 @@ if __name__ == "__main__":
 
         run_cmd(stage_1_command_1)
         run_cmd(stage_1_command_2)
+
+        # python detection.py --test_path ../test_images/old_w_scratch --output_dir ../output/stage_1_restore_output/masks --input_size full_size --GPU -1'
+        # python test.py --Scratch_and_Quality_restore --test_input 
+        # ../output/stage_1_restore_output/masks/input --test_mask ../output/stage_1_restore_output/masks/mask --outputs_dir ../output/stage_1_restore_output --gpu_ids -1
+
+
+        # pdb.set_trace()
 
     ## Solve the case when there is no face in the old photo
     stage_1_results = os.path.join(stage_1_output_dir, "restored_image")

@@ -76,7 +76,6 @@ def parameter_set(opt):
     opt.checkpoints_dir = "./checkpoints/restoration"
     ##
 
-    # pdb.set_trace()
     # opt.Quality_restore -- False
     # opt.Scratch_and_Quality_restore -- True
     if opt.Quality_restore:
