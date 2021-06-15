@@ -13,10 +13,15 @@ from .base_model import BaseModel
 from . import networks
 import math
 
+import pdb
 
 class Mapping_Model_with_mask(nn.Module):
     def __init__(self, nc, mc=64, n_blocks=3, norm="instance", padding_type="reflect", opt=None):
         super(Mapping_Model_with_mask, self).__init__()
+        # nc = 64
+        # mc = 512
+        # n_blocks = 6
+        # norm = 'instance'
 
         norm_layer = networks.get_norm_layer(norm_type=norm)
         activation = nn.ReLU(True)

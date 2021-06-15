@@ -8,6 +8,7 @@ from torch.autograd import Variable
 from util.image_pool import ImagePool
 from .base_model import BaseModel
 from . import networks
+import pdb
 
 class Pix2PixHDModel(BaseModel):
     def name(self):
@@ -21,6 +22,8 @@ class Pix2PixHDModel(BaseModel):
     
     def initialize(self, opt):
         BaseModel.initialize(self, opt)
+        pdb.set_trace()
+
         if opt.resize_or_crop != 'none' or not opt.isTrain: # when training at full res this causes OOM
             torch.backends.cudnn.benchmark = True
         self.isTrain = opt.isTrain

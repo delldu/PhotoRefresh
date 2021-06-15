@@ -2,9 +2,11 @@
 # Licensed under the MIT License.
 
 import torch
-
+import pdb
 
 def create_model(opt):
+    pdb.set_trace()
+
     if opt.model == "pix2pixHD":
         from .pix2pixHD_model import Pix2PixHDModel, InferenceModel
 
@@ -27,6 +29,8 @@ def create_model(opt):
     return model
 
 def create_da_model(opt):
+    pdb.set_trace()
+
     if opt.model == 'pix2pixHD':
         from .pix2pixHD_model_DA import Pix2PixHDModel, InferenceModel
         if opt.isTrain:

@@ -7,12 +7,20 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 
+import pdb
 
 class Downsample(nn.Module):
     # https://github.com/adobe/antialiased-cnns
 
     def __init__(self, pad_type="reflect", filt_size=3, stride=2, channels=None, pad_off=0):
         super(Downsample, self).__init__()
+        # self = Downsample()
+        # pad_type = 'reflect'
+        # filt_size = 3
+        # stride = 2
+        # channels = 64
+        # pad_off = 0
+
         self.filt_size = filt_size
         self.pad_off = pad_off
         self.pad_sizes = [

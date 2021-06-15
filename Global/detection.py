@@ -17,12 +17,16 @@ from PIL import Image, ImageFile
 from detection_models import networks
 from detection_util.util import *
 
+import pdb
+
 warnings.filterwarnings("ignore", category=UserWarning)
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 def data_transforms(img, full_size, method=Image.BICUBIC):
+    # pdb.set_trace()
+    # full_size = 'full_size'
     if full_size == "full_size":
         ow, oh = img.size
         h = int(round(oh / 16) * 16)
@@ -93,6 +97,11 @@ def main(config):
     model.load_state_dict(checkpoint["model_state"])
     print("model weights loaded")
 
+    # pdb.set_trace()
+    # (Pdb) pp config
+    # Namespace(GPU=-1, input_size='full_size', 
+    # output_dir='output/stage_1_restore_output/masks', test_path='test_images/old_w_scratch')
+
     if config.GPU >= 0:
         model.to(config.GPU)
     else: 
@@ -109,12 +118,15 @@ def main(config):
     save_url = os.path.join(config.output_dir)
     mkdir_if_not(save_url)
 
+    # pdb.set_trace()
+    # save_url = 'output/stage_1_restore_output/masks'
     input_dir = os.path.join(save_url, "input")
     output_dir = os.path.join(save_url, "mask")
     # blend_output_dir=os.path.join(save_url, 'blend_output')
     mkdir_if_not(input_dir)
     mkdir_if_not(output_dir)
     # mkdir_if_not(blend_output_dir)
+
 
     idx = 0
 

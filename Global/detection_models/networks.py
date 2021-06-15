@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from detection_models.sync_batchnorm import DataParallelWithCallback
 from detection_models.antialiasing import Downsample
 
+import pdb
 
 class UNet(nn.Module):
     def __init__(
@@ -46,6 +47,20 @@ class UNet(nn.Module):
 						   'upsample' will use bilinear upsampling.
 		"""
         super().__init__()
+        # pdb.set_trace()
+        # self = UNet()
+        # in_channels = 1
+        # out_channels = 1
+        # depth = 4
+        # conv_num = 2
+        # wf = 6
+        # padding = True
+        # batch_norm = True
+        # up_mode = 'upsample'
+        # with_tanh = False
+        # sync_bn = True
+        # antialiasing = True
+
         assert up_mode in ("upconv", "upsample")
         self.padding = padding
         self.depth = depth - 1

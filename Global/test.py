@@ -15,8 +15,10 @@ import torchvision.transforms as transforms
 import torchvision.transforms as transforms
 import numpy as np
 
+import pdb
 
 def data_transforms(img, method=Image.BILINEAR, scale=False):
+    # pdb.set_trace() ==> ...
 
     ow, oh = img.size
     pw, ph = ow, oh
@@ -38,6 +40,8 @@ def data_transforms(img, method=Image.BILINEAR, scale=False):
 
 
 def data_transforms_rgb_old(img):
+    pdb.set_trace()
+
     w, h = img.size
     A = img
     if w < 256 or h < 256:
@@ -46,7 +50,7 @@ def data_transforms_rgb_old(img):
 
 
 def irregular_hole_synthesize(img, mask):
-
+    # pdb.set_trace()
     img_np = np.array(img).astype("uint8")
     mask_np = np.array(mask).astype("uint8")
     mask_np = mask_np / 255
@@ -72,6 +76,9 @@ def parameter_set(opt):
     opt.checkpoints_dir = "./checkpoints/restoration"
     ##
 
+    # pdb.set_trace()
+    # opt.Quality_restore -- False
+    # opt.Scratch_and_Quality_restore -- True
     if opt.Quality_restore:
         opt.name = "mapping_quality"
         opt.load_pretrainA = os.path.join(opt.checkpoints_dir, "VAE_A_quality")
@@ -131,6 +138,9 @@ if __name__ == "__main__":
         input = Image.open(input_file).convert("RGB")
 
         print("Now you are processing %s" % (input_name))
+
+        # pdb.set_trace()
+        # opt.NL_use_mask -- True
 
         if opt.NL_use_mask:
             mask_name = mask_loader[i]

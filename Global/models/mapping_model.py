@@ -14,6 +14,7 @@ from . import networks
 import math
 from .NonLocal_feature_mapping_model import *
 
+import pdb
 
 class Mapping_Model(nn.Module):
     def __init__(self, nc, mc=64, n_blocks=3, norm="instance", padding_type="reflect", opt=None):
@@ -313,7 +314,10 @@ class Pix2PixHDModel_Mapping(BaseModel):
 
 
     def inference(self, label, inst):
-
+        # pdb.set_trace()
+        # (Pdb) label.size(), inst.size()
+        # (torch.Size([1, 3, 624, 496]), torch.Size([1, 1, 624, 496]))
+        
         use_gpu = len(self.opt.gpu_ids) > 0
         if use_gpu:
             input_concat = label.data.cuda()

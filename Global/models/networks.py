@@ -11,6 +11,8 @@ from torch.nn.utils import spectral_norm
 # from util.util import SwitchNorm2d
 import torch.nn.functional as F
 
+import pdb
+
 ###############################################################################
 # Functions
 ###############################################################################
@@ -92,6 +94,8 @@ class GlobalGenerator_DCDCv2(nn.Module):
         opt=None,
     ):
         super(GlobalGenerator_DCDCv2, self).__init__()
+        # pdb.set_trace()
+        
         activation = nn.ReLU(True)
 
         model = [
