@@ -1,4 +1,4 @@
-"""Model predict."""# coding=utf-8
+"""Model predict."""  # coding=utf-8
 #
 # /************************************************************************************
 # ***
@@ -23,10 +23,19 @@ from model import get_model, model_device
 if __name__ == "__main__":
     """Predict."""
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--checkpoint', type=str, default="models/image_scratch.pth", help="checkpint file")
-    parser.add_argument('--input', type=str, default="images/*.png", help="input image")
-    parser.add_argument('-o', '--output', type=str, default="output", help="output folder")
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "--checkpoint",
+        type=str,
+        default="models/image_scratch.pth",
+        help="checkpint file",
+    )
+    parser.add_argument("--input", type=str, default="images/*.png", help="input image")
+    parser.add_argument(
+        "-o", "--output", type=str, default="output", help="output folder"
+    )
 
     args = parser.parse_args()
 
@@ -41,8 +50,8 @@ if __name__ == "__main__":
     totensor = transforms.ToTensor()
     toimage = transforms.ToPILImage()
 
-    image_filenames = glob.glob(args.input)
-    progress_bar = tqdm(total = len(image_filenames))
+    image_filenames = sorted(glob.glob(args.input))
+    progress_bar = tqdm(total=len(image_filenames))
 
     for index, filename in enumerate(image_filenames):
         progress_bar.update(1)
@@ -52,5 +61,7 @@ if __name__ == "__main__":
 
         with torch.no_grad():
             output_tensor = model(input_tensor).clamp(0, 1.0).squeeze()
-        
-        toimage(output_tensor.cpu()).save("{}/{}".format(args.output, os.path.basename(filename)))
+
+        toimage(output_tensor.cpu()).save(
+            "{}/{}".format(args.output, os.path.basename(filename))
+        )

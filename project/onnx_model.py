@@ -1,4 +1,4 @@
-"""Onnx Model Tools."""# coding=utf-8
+"""Onnx Model Tools."""  # coding=utf-8
 #
 # /************************************************************************************
 # ***
@@ -30,37 +30,52 @@ from PIL import Image
 #
 from model import get_model
 
+
 def onnx_load(onnx_file):
     session_options = onnxruntime.SessionOptions()
     # session_options.log_severity_level = 0
 
     # Set graph optimization level
-    session_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
+    session_options.graph_optimization_level = (
+        onnxruntime.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
+    )
 
     onnx_model = onnxruntime.InferenceSession(onnx_file, session_options)
     # onnx_model.set_providers(['CUDAExecutionProvider'])
-    print("Onnx Model Engine: ", onnx_model.get_providers(),
-          "Device: ", onnxruntime.get_device())
+    print(
+        "Onnx Model Engine: ",
+        onnx_model.get_providers(),
+        "Device: ",
+        onnxruntime.get_device(),
+    )
 
     return onnx_model
 
 
 def onnx_forward(onnx_model, input):
     def to_numpy(tensor):
-        return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+        return (
+            tensor.detach().cpu().numpy()
+            if tensor.requires_grad
+            else tensor.cpu().numpy()
+        )
 
     onnxruntime_inputs = {onnx_model.get_inputs()[0].name: to_numpy(input)}
     onnxruntime_outputs = onnx_model.run(None, onnxruntime_inputs)
     return torch.from_numpy(onnxruntime_outputs[0])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """Onnx tools ..."""
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--export', help="export onnx model", action='store_true')
-    parser.add_argument('-v', '--verify', help="verify onnx model", action='store_true')
-    parser.add_argument('-o', '--output', type=str, default="output", help="output folder")
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("-e", "--export", help="export onnx model", action="store_true")
+    parser.add_argument("-v", "--verify", help="verify onnx model", action="store_true")
+    parser.add_argument(
+        "-o", "--output", type=str, default="output", help="output folder"
+    )
 
     args = parser.parse_args()
 
@@ -90,15 +105,22 @@ if __name__ == '__main__':
 
         input_names = ["input"]
         output_names = ["output"]
-        dynamic_axes = {'input': {2: "height", 3: "width"},'output': {2: "height", 3: "width"}}
+        dynamic_axes = {
+            "input": {2: "height", 3: "width"},
+            "output": {2: "height", 3: "width"},
+        }
 
-        torch.onnx.export(torch_model, dummy_input, onnx_file_name,
-                          input_names=input_names,
-                          output_names=output_names,
-                          verbose=True,
-                          opset_version=11,
-                          keep_initializers_as_inputs=False,
-                          export_params=True)
+        torch.onnx.export(
+            torch_model,
+            dummy_input,
+            onnx_file_name,
+            input_names=input_names,
+            output_names=output_names,
+            verbose=True,
+            opset_version=11,
+            keep_initializers_as_inputs=False,
+            export_params=True,
+        )
 
         # 3. Visual model
         # python -c "import netron; netron.start('output/image_scratch.onnx')"
@@ -112,17 +134,28 @@ if __name__ == '__main__':
         onnxruntime_engine = onnx_load(onnx_file_name)
 
         def to_numpy(tensor):
-            return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+            return (
+                tensor.detach().cpu().numpy()
+                if tensor.requires_grad
+                else tensor.cpu().numpy()
+            )
 
         with torch.no_grad():
             torch_output = torch_model(dummy_input)
 
-        onnxruntime_inputs = {onnxruntime_engine.get_inputs()[0].name: to_numpy(dummy_input)}
+        onnxruntime_inputs = {
+            onnxruntime_engine.get_inputs()[0].name: to_numpy(dummy_input)
+        }
         onnxruntime_outputs = onnxruntime_engine.run(None, onnxruntime_inputs)
 
-        np.testing.assert_allclose(to_numpy(torch_output), onnxruntime_outputs[0], rtol=1e-03, atol=1e-03)
-        print("Onnx model {} has been tested with ONNXRuntime, result sounds good !".format(onnx_file_name))
-
+        np.testing.assert_allclose(
+            to_numpy(torch_output), onnxruntime_outputs[0], rtol=1e-03, atol=1e-03
+        )
+        print(
+            "Onnx model {} tested with ONNXRuntime, result sounds good !".format(
+                onnx_file_name
+            )
+        )
 
     #
     # /************************************************************************************
@@ -137,4 +170,3 @@ if __name__ == '__main__':
 
     if args.verify:
         verify_onnx()
-
