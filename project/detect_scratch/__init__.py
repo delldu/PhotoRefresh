@@ -1,4 +1,4 @@
-"""Image Weather Package."""  # coding=utf-8
+"""Detect Scratch Package."""  # coding=utf-8
 #
 # /************************************************************************************
 # ***
@@ -15,7 +15,6 @@ import os
 import time
 from tqdm import tqdm
 import torch
-import torchvision.transforms as T
 from PIL import Image
 import redos
 import todos
@@ -83,7 +82,6 @@ def image_server(name, HOST="localhost", port=6379):
             input_tensor = todos.data.load_tensor(input_file)
             output_tensor = model_forward(model, device, input_tensor)
             todos.data.save_tensor(output_tensor, output_file)
-            # T.ToPILImage()(output_tensor.squeeze(0).cpu()).save(output_file)
             return True
         except Exception as e:
             print("Error: ", e)
@@ -105,7 +103,6 @@ def image_predict(input_files, output_dir):
         try:
             input_tensor = todos.data.load_tensor(filename)
             output_tensor = model_forward(model, device, input_tensor)
-            # T.ToPILImage()(output_tensor.squeeze(0).cpu()).save(output_file)
             todos.data.save_tensor(output_tensor, output_file)
             return True
         except Exception as e:
@@ -148,7 +145,6 @@ def video_service(input_file, output_file, targ):
         input_tensor = todos.data.frame_totensor(data)
         temp_output_file = "{}/{:06d}.png".format(output_dir, no)
         output_tensor = model_forward(model, device, input_tensor)
-        # T.ToPILImage()(output_tensor.squeeze(0).cpu()).save(temp_output_file)
         todos.data.save_tensor(output_tensor, temp_output_file)
 
     video.forward(callback=clean_video_frame)
