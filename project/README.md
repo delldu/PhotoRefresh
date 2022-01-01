@@ -1,24 +1,4 @@
-## Readme
-### 1. Project
-#### 1.1 Name
-**ScratchDetect**
-#### 1.2 Introduce
+## README
 
-**Dell** create this version (`0.0.1`) at 2021年 06月 16日 星期三 00:13:22 CST.
-
-### 2. Build & Run 
-
-#### 2.1 Depend
-`python: >= 3.7.7`
-`pytorch: >= 1.5.1`
-`pillow: >= 7.2.0` 
-`torchvision: >=0.6.1`
-
-#### 2.2 Predict
-`python predict.py --help`
-`convert images/a.png output/a.png +append /tmp/a.png`
-`display /tmp/a.png`
-
-#### 2.3 Onnx Tool
-`python onnx_model.py --help`
+demo.py
 

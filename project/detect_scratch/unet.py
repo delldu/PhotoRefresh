@@ -47,16 +47,12 @@ class Downsample(nn.Module):
         #         [2., 4., 2.],
         #         [1., 2., 1.]])
         filt = filt / torch.sum(filt)
-        self.register_buffer(
-            "filt", filt[None, None, :, :].repeat((self.channels, 1, 1, 1))
-        )
+        self.register_buffer("filt", filt[None, None, :, :].repeat((self.channels, 1, 1, 1)))
 
         self.pad = nn.ReflectionPad2d(self.pad_sizes)
 
     def forward(self, input):
-        return F.conv2d(
-            self.pad(input), self.filt, stride=self.stride, groups=input.shape[1]
-        )
+        return F.conv2d(self.pad(input), self.filt, stride=self.stride, groups=input.shape[1])
 
 
 class UNet(nn.Module):
@@ -126,16 +122,12 @@ class UNet(nn.Module):
                     ]
                 )
             )
-            self.down_path.append(
-                UNetConvBlock(conv_num, prev_channels, 2 ** (wf + i + 1), padding)
-            )
+            self.down_path.append(UNetConvBlock(conv_num, prev_channels, 2 ** (wf + i + 1), padding))
             prev_channels = 2 ** (wf + i + 1)
 
         self.up_path = nn.ModuleList()
         for i in reversed(range(depth)):
-            self.up_path.append(
-                UNetUpBlock(conv_num, prev_channels, 2 ** (wf + i), padding)
-            )
+            self.up_path.append(UNetUpBlock(conv_num, prev_channels, 2 ** (wf + i), padding))
             prev_channels = 2 ** (wf + i)
 
         self.last = nn.Sequential(
@@ -158,7 +150,7 @@ class UNet(nn.Module):
         for i, up in enumerate(self.up_path):
             x = up(x, blocks[-i - 1])
 
-        return self.last(x)
+        return self.last(x).clamp(0, 1.0)
 
 
 class UNetConvBlock(nn.Module):
