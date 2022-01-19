@@ -24,7 +24,7 @@ import pdb
 INPUT_IMAGE_TIMES = 16
 
 
-def get_model(checkpoint):
+def get_model():
     """Create model."""
 
     model = unet.UNet(
@@ -35,6 +35,10 @@ def get_model(checkpoint):
         wf=6,
         padding=True,
     )
+    
+    cdir = os.path.dirname(__file__)
+    model_path = "models/image_scratch.pth"
+    checkpoint = model_path if cdir == "" else cdir + "/" + model_path
 
     todos.model.load(model, checkpoint)
     device = todos.model.get_device()
@@ -73,8 +77,7 @@ def image_client(name, input_files, output_dir):
 
 def image_server(name, HOST="localhost", port=6379):
     # load model
-    checkpoint = os.path.dirname(__file__) + "/models/image_scratch.pth"
-    model, device = get_model(checkpoint)
+    model, device = get_model()
 
     def do_service(input_file, output_file, targ):
         print(f"  detect {input_file} ...")
@@ -95,8 +98,7 @@ def image_predict(input_files, output_dir):
     todos.data.mkdir(output_dir)
 
     # load model
-    checkpoint = os.path.dirname(__file__) + "/models/image_scratch.pth"
-    model, device = get_model(checkpoint)
+    model, device = get_model()
 
     def do_service(input_file, output_file, targ):
         # print(f"  detect {input_file} ...")
@@ -132,8 +134,7 @@ def video_service(input_file, output_file, targ):
     todos.data.mkdir(output_dir)
 
     # load model
-    checkpoint = os.path.dirname(__file__) + "/models/image_scratch.pth"
-    model, device = get_model(checkpoint)
+    model, device = get_model()
 
     print(f"  detect {input_file}, save to {output_file} ...")
     progress_bar = tqdm(total=video.n_frames)
