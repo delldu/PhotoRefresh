@@ -150,7 +150,10 @@ class UNet(nn.Module):
         for i, up in enumerate(self.up_path):
             x = up(x, blocks[-i - 1])
 
-        return self.last(x).clamp(0, 1.0)
+        y = self.last(x).clamp(0, 1.0)
+        one = torch.ones_like(y)
+        zero = torch.zeros_like(y)
+        return torch.where(y > 0.5, zero, one)
 
 
 class UNetConvBlock(nn.Module):

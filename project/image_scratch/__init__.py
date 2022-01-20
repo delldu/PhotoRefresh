@@ -14,17 +14,20 @@ __version__ = "1.0.0"
 import os
 import time
 from tqdm import tqdm
-import torch
 from PIL import Image
+
+import torch
 import redos
 import todos
 from . import unet
+import torchvision.transforms as T
 import pdb
+
 
 INPUT_IMAGE_TIMES = 16
 
 
-def get_model():
+def detector(device=torch.device("cuda:0")):
     """Create model."""
 
     model = unet.UNet(
@@ -35,31 +38,35 @@ def get_model():
         wf=6,
         padding=True,
     )
-    
+
     cdir = os.path.dirname(__file__)
     model_path = "models/image_scratch.pth"
     checkpoint = model_path if cdir == "" else cdir + "/" + model_path
 
     todos.model.load(model, checkpoint)
-    device = todos.model.get_device()
     model = model.to(device)
     model.eval()
 
-    return model, device
+    return model
 
 
-def model_forward(model, device, input_tensor):
+def load_tensor(input_file):
+    image = Image.open(input_file).convert("L")
+    return T.ToTensor()(image).unsqueeze(0)
+
+
+def model_forward(model, device, gray_input_tensor):
     # zeropad for model
 
     # convert tensor from 1x4xHxW to 1x1xHxW
-    input_tensor = input_tensor[:, 0:1, :, :]
-    H, W = input_tensor.size(2), input_tensor.size(3)
+    H, W = gray_input_tensor.size(2), gray_input_tensor.size(3)
     if H % INPUT_IMAGE_TIMES == 0 and W % INPUT_IMAGE_TIMES == 0:
-        return todos.model.forward(model, device, input_tensor)
+        # output_tensor.size() -- [1, 1, 1024, 1024]
+        return todos.model.forward(model, device, gray_input_tensor)
 
     # else
-    input_tensor = todos.data.zeropad_tensor(input_tensor, times=INPUT_IMAGE_TIMES)
-    output_tensor = todos.model.forward(model, device, input_tensor)
+    gray_input_tensor = todos.data.zeropad_tensor(gray_input_tensor, times=INPUT_IMAGE_TIMES)
+    output_tensor = todos.model.forward(model, device, gray_input_tensor)
     return output_tensor[:, :, 0:H, 0:W]
 
 
@@ -77,14 +84,17 @@ def image_client(name, input_files, output_dir):
 
 def image_server(name, HOST="localhost", port=6379):
     # load model
-    model, device = get_model()
+    device = todos.model.get_device()
+    model = detector(device)
 
     def do_service(input_file, output_file, targ):
         print(f"  detect {input_file} ...")
         try:
             input_tensor = todos.data.load_tensor(input_file)
-            output_tensor = model_forward(model, device, input_tensor)
-            todos.data.save_tensor(output_tensor, output_file)
+            gray_tensor = load_tensor(input_file)
+            output_tensor = model_forward(model, device, gray_tensor)
+            blend_tensor = torch.cat([input_tensor, output_tensor.cpu()], dim=1)
+            todos.data.save_tensor(blend_tensor, output_file)
             return True
         except Exception as e:
             print("Error: ", e)
@@ -98,14 +108,16 @@ def image_predict(input_files, output_dir):
     todos.data.mkdir(output_dir)
 
     # load model
-    model, device = get_model()
+    device = todos.model.get_device()
+    model = detector(device)
 
     def do_service(input_file, output_file, targ):
-        # print(f"  detect {input_file} ...")
         try:
             input_tensor = todos.data.load_tensor(filename)
-            output_tensor = model_forward(model, device, input_tensor)
-            todos.data.save_tensor(output_tensor, output_file)
+            gray_tensor = load_tensor(filename)
+            output_tensor = model_forward(model, device, gray_tensor)
+            blend_tensor = torch.cat([input_tensor, output_tensor.cpu()], dim=1)
+            todos.data.save_tensor(blend_tensor, output_file)
             return True
         except Exception as e:
             print("Error: ", e)
@@ -134,7 +146,8 @@ def video_service(input_file, output_file, targ):
     todos.data.mkdir(output_dir)
 
     # load model
-    model, device = get_model()
+    device = todos.model.get_device()
+    model = detector(device)
 
     print(f"  detect {input_file}, save to {output_file} ...")
     progress_bar = tqdm(total=video.n_frames)
@@ -144,9 +157,12 @@ def video_service(input_file, output_file, targ):
         progress_bar.update(1)
 
         input_tensor = todos.data.frame_totensor(data)
+        input_tensor = input_tensor[:, 0:3, :, :]
+        gray_tensor = input_tensor.mean(dim=1, keepdim=True)
         temp_output_file = "{}/{:06d}.png".format(output_dir, no)
-        output_tensor = model_forward(model, device, input_tensor)
-        todos.data.save_tensor(output_tensor, temp_output_file)
+        output_tensor = model_forward(model, device, gray_tensor)
+        blend_tensor = torch.cat([input_tensor, output_tensor.cpu()], dim=1)
+        todos.data.save_tensor(blend_tensor, temp_output_file)
 
     video.forward(callback=clean_video_frame)
 

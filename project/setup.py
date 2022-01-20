@@ -15,7 +15,7 @@ with open("README.md", "r") as file:
     long_description = file.read()
 
 setup(
-    name="detect_scratch",
+    name="image_scratch",
     version="1.0.0",
     author="Dell Du",
     author_email="18588220928@163.com",
@@ -23,8 +23,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/delldu/PhotoRefresh",
-    packages=["detect_scratch"],
-    package_data={"detect_scratch": ["models/image_scratch.pth"]},
+    packages=["image_scratch"],
+    package_data={"image_scratch": ["models/image_scratch.pth"]},
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",

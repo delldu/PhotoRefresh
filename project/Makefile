@@ -7,13 +7,13 @@ all:
 
 format:
 	@echo
-	find detect_scratch -name "*.py" -exec black -l 120 {} \;
+	find image_scratch -name "*.py" -exec black -l 120 {} \;
 
 install:
 	python setup.py install
 
 uninstall:
-	python setup.py uninstall
+	pip uninstall image_scratch
 
 clean:
-	rm -rf build dist detect_scratch.egg-info
+	rm -rf build dist image_scratch.egg-info
