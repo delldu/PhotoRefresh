@@ -15,7 +15,7 @@ device = todos.get_device()
 d = image_scratch.detector(device)
 gray_tensor = image_scratch.load_tensor(input_file)
 # output_tensor = image_scratch.model_forward(d, device, gray_tensor)
-output_tensor = d(device, gray_tensor.to(device))
+output_tensor = d(gray_tensor.to(device))
 todos.save_tensor(output_tensor, output_file)
 ```
 
