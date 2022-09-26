@@ -142,9 +142,13 @@ class UNet(nn.Module):
         x = self.first(x)
 
         blocks = []
-        for i, down_block in enumerate(self.down_path):
+        # for i, down_block in enumerate(self.down_path):
+        #     blocks.append(x)
+        #     x = self.down_sample[i](x)
+        #     x = down_block(x)
+        for sample_block, down_block in zip(self.down_sample, self.down_path):
             blocks.append(x)
-            x = self.down_sample[i](x)
+            x = sample_block(x)
             x = down_block(x)
 
         for i, up in enumerate(self.up_path):
@@ -186,18 +190,19 @@ class UNetUpBlock(nn.Module):
 
         self.conv_block = UNetConvBlock(conv_num, in_size, out_size, padding)
 
-    def center_crop(self, layer, target_size):
+    def center_crop(self, layer, H: int, W: int):
         _, _, height, width = layer.size()
-        y1 = (height - target_size[0]) // 2
-        y2 = y1 + target_size[0]
-        x1 = (width - target_size[1]) // 2
-        x2 = x1 + target_size[1]
+        y1 = (height - H) // 2
+        y2 = y1 + H
+        x1 = (width - W) // 2
+        x2 = x1 + W
 
         return layer[:, :, y1:y2, x1:x2]
 
     def forward(self, x, bridge):
         up = self.up(x)
-        crop1 = self.center_crop(bridge, up.shape[2:])
+        B, C, H, W = up.shape
+        crop1 = self.center_crop(bridge, H, W)
         out = torch.cat([up, crop1], 1)
         out = self.conv_block(out)
 

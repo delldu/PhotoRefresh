@@ -12,7 +12,6 @@
 __version__ = "1.0.0"
 
 import os
-import time
 from tqdm import tqdm
 from PIL import Image
 
@@ -24,10 +23,10 @@ import torchvision.transforms as T
 import pdb
 
 
-INPUT_IMAGE_TIMES = 16
+# INPUT_IMAGE_TIMES = 16
 
 
-def detector(device=torch.device("cuda:0")):
+def get_model():
     """Create model."""
 
     model = unet.UNet(
@@ -43,11 +42,19 @@ def detector(device=torch.device("cuda:0")):
     model_path = "models/image_scratch.pth"
     checkpoint = model_path if cdir == "" else cdir + "/" + model_path
 
+    device = todos.model.get_device()
     todos.model.load(model, checkpoint)
     model = model.to(device)
     model.eval()
 
-    return model
+    print(f"Running on {device} ...")
+    model = torch.jit.script(model)
+
+    todos.data.mkdir("output")
+    if not os.path.exists("output/image_scratch.torch"):
+        model.save("output/image_scratch.torch")
+
+    return model, device
 
 
 def load_tensor(input_file):
@@ -55,18 +62,32 @@ def load_tensor(input_file):
     return T.ToTensor()(image).unsqueeze(0)
 
 
-def model_forward(model, device, gray_input_tensor):
+# def model_forward(model, device, gray_input_tensor):
+#     # zeropad for model
+
+#     # convert tensor from 1x4xHxW to 1x1xHxW
+#     H, W = gray_input_tensor.size(2), gray_input_tensor.size(3)
+#     if H % INPUT_IMAGE_TIMES == 0 and W % INPUT_IMAGE_TIMES == 0:
+#         # output_tensor.size() -- [1, 1, 1024, 1024]
+#         return todos.model.forward(model, device, gray_input_tensor)
+
+#     # else
+#     gray_input_tensor = todos.data.zeropad_tensor(gray_input_tensor, times=INPUT_IMAGE_TIMES)
+#     output_tensor = todos.model.forward(model, device, gray_input_tensor)
+#     return output_tensor[:, :, 0:H, 0:W]
+
+
+def model_forward(model, device, input_tensor, multi_times=16):
     # zeropad for model
+    H, W = input_tensor.size(2), input_tensor.size(3)
+    if H % multi_times != 0 or W % multi_times != 0:
+        input_tensor = todos.data.zeropad_tensor(input_tensor, times=multi_times)
 
-    # convert tensor from 1x4xHxW to 1x1xHxW
-    H, W = gray_input_tensor.size(2), gray_input_tensor.size(3)
-    if H % INPUT_IMAGE_TIMES == 0 and W % INPUT_IMAGE_TIMES == 0:
-        # output_tensor.size() -- [1, 1, 1024, 1024]
-        return todos.model.forward(model, device, gray_input_tensor)
+    torch.cuda.synchronize()
+    with torch.jit.optimized_execution(False):
+        output_tensor = todos.model.forward(model, device, input_tensor)
+    torch.cuda.synchronize()
 
-    # else
-    gray_input_tensor = todos.data.zeropad_tensor(gray_input_tensor, times=INPUT_IMAGE_TIMES)
-    output_tensor = todos.model.forward(model, device, gray_input_tensor)
     return output_tensor[:, :, 0:H, 0:W]
 
 
@@ -84,8 +105,7 @@ def image_client(name, input_files, output_dir):
 
 def image_server(name, HOST="localhost", port=6379):
     # load model
-    device = todos.model.get_device()
-    model = detector(device)
+    model, device = get_model()
 
     def do_service(input_file, output_file, targ):
         print(f"  detect {input_file} ...")
@@ -108,8 +128,7 @@ def image_predict(input_files, output_dir):
     todos.data.mkdir(output_dir)
 
     # load model
-    device = todos.model.get_device()
-    model = detector(device)
+    model, device = get_model()
 
     def do_service(input_file, output_file, targ):
         try:
@@ -118,6 +137,7 @@ def image_predict(input_files, output_dir):
             output_tensor = model_forward(model, device, gray_tensor)
             blend_tensor = torch.cat([input_tensor, output_tensor.cpu()], dim=1)
             todos.data.save_tensor(blend_tensor, output_file)
+
             return True
         except Exception as e:
             print("Error: ", e)
@@ -146,8 +166,7 @@ def video_service(input_file, output_file, targ):
     todos.data.mkdir(output_dir)
 
     # load model
-    device = todos.model.get_device()
-    model = detector(device)
+    model, device = get_model()
 
     print(f"  detect {input_file}, save to {output_file} ...")
     progress_bar = tqdm(total=video.n_frames)
