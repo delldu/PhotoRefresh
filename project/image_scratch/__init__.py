@@ -61,32 +61,13 @@ def load_tensor(input_file):
     image = Image.open(input_file).convert("L")
     return T.ToTensor()(image).unsqueeze(0)
 
-
-# def model_forward(model, device, gray_input_tensor):
-#     # zeropad for model
-
-#     # convert tensor from 1x4xHxW to 1x1xHxW
-#     H, W = gray_input_tensor.size(2), gray_input_tensor.size(3)
-#     if H % INPUT_IMAGE_TIMES == 0 and W % INPUT_IMAGE_TIMES == 0:
-#         # output_tensor.size() -- [1, 1, 1024, 1024]
-#         return todos.model.forward(model, device, gray_input_tensor)
-
-#     # else
-#     gray_input_tensor = todos.data.zeropad_tensor(gray_input_tensor, times=INPUT_IMAGE_TIMES)
-#     output_tensor = todos.model.forward(model, device, gray_input_tensor)
-#     return output_tensor[:, :, 0:H, 0:W]
-
-
 def model_forward(model, device, input_tensor, multi_times=16):
     # zeropad for model
     H, W = input_tensor.size(2), input_tensor.size(3)
     if H % multi_times != 0 or W % multi_times != 0:
         input_tensor = todos.data.zeropad_tensor(input_tensor, times=multi_times)
 
-    torch.cuda.synchronize()
-    with torch.jit.optimized_execution(False):
-        output_tensor = todos.model.forward(model, device, input_tensor)
-    torch.cuda.synchronize()
+    output_tensor = todos.model.forward(model, device, input_tensor)
 
     return output_tensor[:, :, 0:H, 0:W]
 
