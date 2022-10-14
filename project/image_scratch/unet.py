@@ -138,7 +138,11 @@ class UNet(nn.Module):
             ]
         )
 
-    def forward(self, x):
+    def forward(self, input_tensor):
+        # 0.299 R + 0.587 G + 0.114 B
+
+        x = 0.299 * input_tensor[:, 0:1, :, :] + 0.587 * input_tensor[:, 1:2, :, :] + 0.114 * input_tensor[:, 2:3, :, :]
+
         x = self.first(x)
 
         blocks = []
@@ -157,7 +161,9 @@ class UNet(nn.Module):
         y = self.last(x).clamp(0, 1.0)
         one = torch.ones_like(y)
         zero = torch.zeros_like(y)
-        return torch.where(y > 0.5, zero, one)
+
+        mask_tensor = torch.where(y > 0.5, zero, one)
+        return torch.cat((input_tensor, mask_tensor), dim=1)
 
 
 class UNetConvBlock(nn.Module):

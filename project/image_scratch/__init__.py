@@ -57,11 +57,6 @@ def get_model():
     return model, device
 
 
-def load_tensor(input_file):
-    image = Image.open(input_file).convert("L")
-    return T.ToTensor()(image).unsqueeze(0)
-
-
 def model_forward(model, device, input_tensor, multi_times=16):
     # zeropad for model
     H, W = input_tensor.size(2), input_tensor.size(3)
@@ -93,10 +88,8 @@ def image_server(name, HOST="localhost", port=6379):
         print(f"  detect {input_file} ...")
         try:
             input_tensor = todos.data.load_tensor(input_file)
-            gray_tensor = load_tensor(input_file)
-            output_tensor = model_forward(model, device, gray_tensor)
-            blend_tensor = torch.cat([input_tensor, output_tensor.cpu()], dim=1)
-            todos.data.save_tensor(blend_tensor, output_file)
+            output_tensor = model_forward(model, device, input_tensor)
+            todos.data.save_tensor(output_tensor, output_file)
             return True
         except Exception as e:
             print("Error: ", e)
@@ -115,10 +108,8 @@ def image_predict(input_files, output_dir):
     def do_service(input_file, output_file, targ):
         try:
             input_tensor = todos.data.load_tensor(filename)
-            gray_tensor = load_tensor(filename)
-            output_tensor = model_forward(model, device, gray_tensor)
-            blend_tensor = torch.cat([input_tensor, output_tensor.cpu()], dim=1)
-            todos.data.save_tensor(blend_tensor, output_file)
+            output_tensor = model_forward(model, device, input_tensor)
+            todos.data.save_tensor(output_tensor, output_file)
 
             return True
         except Exception as e:
