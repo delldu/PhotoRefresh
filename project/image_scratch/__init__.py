@@ -61,6 +61,7 @@ def load_tensor(input_file):
     image = Image.open(input_file).convert("L")
     return T.ToTensor()(image).unsqueeze(0)
 
+
 def model_forward(model, device, input_tensor, multi_times=16):
     # zeropad for model
     H, W = input_tensor.size(2), input_tensor.size(3)
