@@ -8,7 +8,7 @@
 # ***
 # ************************************************************************************/
 #
-
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -18,13 +18,8 @@ import pdb
 
 class Downsample(nn.Module):
     # https://github.com/adobe/antialiased-cnns
-
-    def __init__(self, filt_size=3, stride=2, channels=None, pad_off=0):
+    def __init__(self, filt_size=3, stride=2, channels=64, pad_off=0):
         super(Downsample, self).__init__()
-        # filt_size = 3
-        # stride = 2
-        # channels = 64
-        # pad_off = 0
 
         self.filt_size = filt_size
         self.pad_off = pad_off
@@ -60,7 +55,7 @@ class UNet(nn.Module):
         self,
         in_channels=3,
         out_channels=3,
-        depth=5,
+        depth=4,
         conv_num=2,
         wf=6,
         padding=True,
@@ -84,10 +79,6 @@ class UNet(nn.Module):
         super().__init__()
         # in_channels = 1
         # out_channels = 1
-        # depth = 4
-        # conv_num = 2
-        # wf = 6
-        # padding = True
 
         self.padding = padding
         self.depth = depth - 1
@@ -138,9 +129,8 @@ class UNet(nn.Module):
             ]
         )
 
-    def forward(self, input_tensor):
+    def forward_x(self, input_tensor):
         # 0.299 R + 0.587 G + 0.114 B
-
         x = 0.299 * input_tensor[:, 0:1, :, :] + 0.587 * input_tensor[:, 1:2, :, :] + 0.114 * input_tensor[:, 2:3, :, :]
 
         x = self.first(x)
@@ -164,6 +154,42 @@ class UNet(nn.Module):
 
         mask_tensor = torch.where(y > 0.5, zero, one)
         return torch.cat((input_tensor, mask_tensor), dim=1)
+
+    def forward(self, x):
+        # Define max GPU/CPU memory -- 4G
+        max_h = 1024
+        max_W = 1024
+        multi_times = 16
+
+        # Need Resize ?
+        B, C, H, W = x.size()
+        if H > max_h or W > max_W:
+            s = min(max_h / H, max_W / W)
+            SH, SW = int(s * H), int(s * W)
+            resize_x = F.interpolate(x, size=(SH, SW), mode="bilinear", align_corners=False)
+        else:
+            resize_x = x
+
+        # Need Zero Pad ?
+        ZH, ZW = resize_x.size(2), resize_x.size(3)
+        if ZH % multi_times != 0 or ZW % multi_times != 0:
+            NH = multi_times * math.ceil(ZH / multi_times)
+            NW = multi_times * math.ceil(ZW / multi_times)
+            resize_zeropad_x = resize_x.new_zeros(B, C, NH, NW)
+            resize_zeropad_x[:, :, 0:ZH, 0:ZW] = resize_x
+        else:
+            resize_zeropad_x = resize_x
+
+        # MS Begin
+        y = self.forward_x(resize_zeropad_x)
+        del resize_zeropad_x, resize_x  # Release memory !!!
+
+        y = y[:, :, 0:ZH, 0:ZW]  # Remove Zero Pads
+        if ZH != H or ZW != W:
+            y = F.interpolate(y, size=(H, W), mode="bilinear", align_corners=False)
+        # MS End
+
+        return y
 
 
 class UNetConvBlock(nn.Module):
