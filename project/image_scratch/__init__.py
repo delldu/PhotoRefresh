@@ -20,7 +20,7 @@ from . import unet
 import pdb
 
 
-def get_model():
+def get_scratch_model():
     """Create model."""
 
     model = unet.UNet(
@@ -56,7 +56,7 @@ def image_predict(input_files, output_dir):
     todos.data.mkdir(output_dir)
 
     # load model
-    model, device = get_model()
+    model, device = get_scratch_model()
 
     def do_service(input_file, output_file, targ):
         try:
