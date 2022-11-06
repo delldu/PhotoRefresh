@@ -177,8 +177,13 @@ class UNetUpBlock(nn.Module):
         return layer[:, :, diff_y : (diff_y + target_size[0]), diff_x : (diff_x + target_size[1])]
 
     def forward(self, x, bridge):
+        # (Pdb) bridge.size() -- torch.Size([1, 512, 40, 32])
         up = self.up(x)
         crop1 = self.center_crop(bridge, up.shape[2:])
+        # pdb.set_trace()
+        # (Pdb) pp up.shape -- torch.Size([1, 512, 40, 32])
+        # (Pdb) pp up.shape[2:] -- torch.Size([40, 32])
+
         out = torch.cat([up, crop1], 1)
         out = self.conv_block(out)
 
