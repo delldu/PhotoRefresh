@@ -8,6 +8,7 @@
 # ***
 # ************************************************************************************/
 #
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -52,8 +53,8 @@ class Downsample(nn.Module):
 class UNet(nn.Module):
     def __init__(
         self,
-        in_channels=3,
-        out_channels=3,
+        in_channels=1,
+        out_channels=1,
         depth=4,
         conv_num=2,
         wf=6,
@@ -132,8 +133,16 @@ class UNet(nn.Module):
                 nn.Tanh(),
             ]
         )
+        self.load_weights()
 
-    def forward_x(self, input_tensor):
+
+    def load_weights(self, model_path="models/image_scratch.pth"):
+        cdir = os.path.dirname(__file__)
+        checkpoint = model_path if cdir == "" else cdir + "/" + model_path
+        self.load_state_dict(torch.load(checkpoint))
+
+
+    def forward(self, input_tensor):
         # 0.299 R + 0.587 G + 0.114 B
         x = 0.299 * input_tensor[:, 0:1, :, :] + 0.587 * input_tensor[:, 1:2, :, :] + 0.114 * input_tensor[:, 2:3, :, :]
 
@@ -158,32 +167,6 @@ class UNet(nn.Module):
 
         mask_tensor = torch.where(y > 0.5, zero, one)
         return torch.cat((input_tensor, mask_tensor), dim=1)
-
-    def forward(self, x):
-        # Need Resize ?
-        B, C, H, W = x.size()
-        if H > self.MAX_H or W > self.MAX_W:
-            s = min(self.MAX_H / H, self.MAX_W / W)
-            SH, SW = int(s * H), int(s * W)
-            resize_x = F.interpolate(x, size=(SH, SW), mode="bilinear", align_corners=False)
-        else:
-            resize_x = x
-
-        # Need Pad ?
-        PH, PW = resize_x.size(2), resize_x.size(3)
-        if PH % self.MAX_TIMES != 0 or PW % self.MAX_TIMES != 0:
-            r_pad = self.MAX_TIMES - (PW % self.MAX_TIMES)
-            b_pad = self.MAX_TIMES - (PH % self.MAX_TIMES)
-            resize_pad_x = F.pad(resize_x, (0, r_pad, 0, b_pad), mode="replicate")
-        else:
-            resize_pad_x = resize_x
-
-        y = self.forward_x(resize_pad_x)
-
-        y = y[:, :, 0:PH, 0:PW]  # Remove Pads
-        y = F.interpolate(y, size=(H, W), mode="bilinear", align_corners=False)  # Remove Resize
-
-        return y
 
 
 class UNetConvBlock(nn.Module):

@@ -20,24 +20,27 @@ from . import unet
 import pdb
 
 
+def get_tvm_model():
+    """
+    TVM model base on torch.jit.trace, that's why we construct it from DeepGuidedFilterAdvanced
+    """
+
+    model = unet.UNet()
+    device = todos.model.get_device()
+    model = model.to(device)
+    model.eval()
+    print(f"Running tvm model model on {device} ...")
+
+    return model, device
+
+
 def get_scratch_model():
     """Create model."""
-
-    model = unet.UNet(
-        in_channels=1,
-        out_channels=1,
-        depth=4,
-        conv_num=2,
-        wf=6,
-        padding=True,
-    )
-
-    cdir = os.path.dirname(__file__)
-    model_path = "models/image_scratch.pth"
-    checkpoint = model_path if cdir == "" else cdir + "/" + model_path
-
     device = todos.model.get_device()
-    todos.model.load(model, checkpoint)
+
+    model = unet.UNet()
+    model = todos.model.ResizePadModel(model)
+
     model = model.to(device)
     model.eval()
 
