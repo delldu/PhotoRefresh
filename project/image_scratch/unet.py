@@ -80,9 +80,9 @@ class UNet(nn.Module):
         # in_channels = 1
         # out_channels = 1
 
-        # Define max GPU/CPU memory -- 6G
+        # Define max GPU/CPU memory -- 8G, 400ms
         self.MAX_H = 1024
-        self.MAX_W = 1024
+        self.MAX_W = 2048
         self.MAX_TIMES = 16
 
         self.padding = padding
@@ -135,12 +135,10 @@ class UNet(nn.Module):
         )
         self.load_weights()
 
-
     def load_weights(self, model_path="models/image_scratch.pth"):
         cdir = os.path.dirname(__file__)
         checkpoint = model_path if cdir == "" else cdir + "/" + model_path
         self.load_state_dict(torch.load(checkpoint))
-
 
     def forward(self, input_tensor):
         # 0.299 R + 0.587 G + 0.114 B
